@@ -27,11 +27,13 @@
         }
     </style>
 </head>
+<audio id="audio" src="sound/burbuja3.wav" autostart="false"></audio>
 
 <body>
     <script src="js/three.js"></script>
     <script src="js/controls/TrackballControls.js"></script>
     <script src="js/renderers/CSS3DRenderer.js"></script>
+    <script src="js/shaders/FresnelShader.js"></script>
 
     <script>
         var camera, scene, renderer;
@@ -51,20 +53,10 @@
 
             scene2 = new THREE.Scene();
 
-            //var scene = new THREE.Scene();
-            //var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-            //renderer = new THREE.WebGLRenderer();
-            //renderer.setSize(window.innerWidth, window.innerHeight);
-            //document.body.appendChild(renderer.domElement);
-            //spher
-            //var geometry = new THREE.SphereGeometry(5, 32, 32);
-            //var material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-            //var sphere = new THREE.Mesh(geometry, material);
-            //scene.add(sphere);
             //Grid
             var gridHelper = new THREE.GridHelper(100, 10);
             scene.add(gridHelper);
+
 
 
             group = new THREE.Group();
@@ -79,10 +71,8 @@
                         opacity: .3,
                         transparent: true
                     });
-                console.log(material);
+                //console.log(material);
                 var sphere = new THREE.Mesh(geometry, material);
-
-                //scene2.add(sphere);
 
                 sphere.position.x = Math.random() * 200 - 100;
                 sphere.position.y = Math.random() * 200 - 100;
@@ -95,9 +85,8 @@
                 sphere.scale.x = sphere.scale.y = sphere.scale.z = Math.random() + 0.5;
 
                 group.add(sphere);
-                //scene2.add(sphere);
+                //scene.remove( object );
             }
-
             renderer = new THREE.WebGLRenderer();
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -108,26 +97,14 @@
             renderer2.domElement.style.position = 'absolute';
             renderer2.domElement.style.top = 0;
             document.body.appendChild(renderer2.domElement);
+
+            var raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            //document.addEventListener('mousedown', onDocumentMouseDown, false);
+            //document.addEventListener('touchstart', onDocumentTouchStart, false);
+
         }
-
-        /*
-        //var scene = new THREE.Scene();
-        //var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-        var renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-        //spher
-        var geometry = new THREE.SphereGeometry(1, 32, 32);
-        var material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-        var sphere = new THREE.Mesh(geometry, material);
-        scene.add(sphere);
-        //Grid
-        var gridHelper = new THREE.GridHelper(1000, 10);
-        scene.add(gridHelper);
-
-        camera.position.z = 5;*/
-
         function animate() {
             requestAnimationFrame(animate);
 
@@ -138,24 +115,84 @@
 
             renderer.render(scene, camera);
             renderer2.render(scene2, camera);
+            
         };
         function render() {
-
+            var timer = 0.0001 * Date.now();
             for (var i = 0, l = group.children.length; i < l; i++) {
 
                 var object = group.children[i];
 
-                object.rotation.x += 0.01;
-                object.rotation.y += 0.005;
-                object.position.y = Math.sin(object.rotation.x) * 50;
-
+                //object.rotation.x += 0.01;
+                //object.rotation.y += 0.005;
+                //bject.position.y = Math.cos(object.rotation.x) * 50;
+                object.position.x = 100 * Math.cos(timer + i);
+                object.position.y = 100 * Math.sin(timer + i * 1.1);
             }
-
             renderer.render(scene, camera);
+        }
+        function playSound() {
+            var sound = document.getElementById("audio");
+            sound.currentTime = 1;
+            sound.play()
+        }
+        function Kilc(event) {
+
+            // calculate mouse position in normalized device coordinates
+            // (-1 to +1) for both components
+
+            // Kilc.x = (event.clientX / window.innerWidth) * 2 - 1;
+            // Kilc.y = - (event.clientY / window.innerHeight) * 2 + 1;
+            // console.log("x: "+Kilc.x);
+            // console.log("y: "+Kilc.y);
+
+            playSound();
+            //scene.remove(object);
+            //removeEntity();
 
         }
-        //animate();
+        function removeEntity(object) {
+            var selectedObject = scene.getObjectByName(object.name);
+            scene.remove(selectedObject);
+            animate();
+        }
+
+        /*        function onDocumentTouchStart(event) {
+        
+                    event.preventDefault();
+        
+                    event.clientX = event.touches[0].clientX;
+                    event.clientY = event.touches[0].clientY;
+                    onDocumentMouseDown(event);
+                }
+        
+                function onDocumentMouseDown(event) {
+                    var raycaster = new THREE.Raycaster();
+                    mouse = new THREE.Vector2();
+                    event.preventDefault();
+                    mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+                    mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+                    raycaster.setFromCamera(mouse, camera);
+                    var intersects = raycaster.intersectObjects(scene.children);
+                    if (intersects.length > 0) {
+                        new TWEEN.Tween(intersects[0].object.position).to({
+                            x: Math.random() * 800 - 400,
+                            y: Math.random() * 800 - 400,
+                            z: Math.random() * 800 - 400
+                        }, 2000)
+                            .easing(TWEEN.Easing.Elastic.Out).start();
+                        new TWEEN.Tween(intersects[0].object.rotation).to({
+                            x: Math.random() * 2 * Math.PI,
+                            y: Math.random() * 2 * Math.PI,
+                            z: Math.random() * 2 * Math.PI
+                        }, 2000)
+                            .easing(TWEEN.Easing.Elastic.Out).start();
+                    }
+                }*/
+        window.addEventListener('click', Kilc, false);
+       // window.requestAnimationFrame(render);
     </script>
+
 </body>
 
 </html>
